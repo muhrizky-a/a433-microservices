@@ -5,7 +5,7 @@ executors:
   docker:
     docker:
       - image: docker:stable
-      
+
 # Define a job to be invoked later in a workflow.
 jobs:
   lint-dockerfile:
@@ -33,7 +33,7 @@ jobs:
           name: Build and Push application to Github Packages
           command: |
             # 1. Membuat docker image dari Dockerfile pada direktori sekarang (current directory) dengan nama:tag karsajobs:latest
-            docker build -t muhrizky-a/karsajobs:latest
+            docker build -t muhrizky-a/karsajobs:latest .
             
             # 2. Login ke GitHub Packages
             echo $GITHUB_PERSONAL_ACCESS_TOKEN | docker login ghcr.io -u muhrizky-a --password-stdin
