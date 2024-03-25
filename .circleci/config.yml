@@ -1,0 +1,48 @@
+# Use the latest 2.1 version of CircleCI pipeline process engine.
+version: 2.1
+
+# Define a job to be invoked later in a workflow.
+jobs:
+  lint-dockerfile:
+    executor: docker
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Run hadolint
+          command: docker run --rm --interactive hadolint/hadolint < Dockerfile
+
+  test-app:
+    docker:
+     - image: cimg/go:1.15
+    steps:
+      - checkout
+      - run: go test -v -short --count=1 $(go list ./...)
+
+  build-app-karsajobs:
+    docker:
+      - image: cimg/base:2022.09
+        auth:
+          github_pat: $GITHUB_PERSONAL_ACCESS_TOKEN
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build and Push application to Github Packages
+          command: |
+            # 1. Membuat docker image dari Dockerfile pada direktori sekarang (current directory) dengan nama:tag karsajobs:latest
+            docker build -t muhrizky-a/karsajobs:latest
+            
+            # 2. Login ke GitHub Packages
+            echo $GITHUB_PERSONAL_ACCESS_TOKEN | docker login ghcr.io -u muhrizky-a --password-stdin
+
+            # 3. Push image ke GitHub Packages
+            docker push ghcr.io/muhrizky-a/karsajobs:latest
+
+# Orchestrate jobs using workflows
+workflows:
+  lint-test-and-build-karsajobs:
+    jobs:
+      - lint-dockerfile
+      - test-app
+      - build-app-karsajobs
